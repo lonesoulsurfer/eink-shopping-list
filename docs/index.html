@@ -42,6 +42,7 @@
     background: var(--warn-bg); color: var(--warn-text); border-radius: 10px;
     padding: 12px 14px; margin: 12px 0;
   }
+  .done { border: 2px solid #2e7d32; }
   .small { font-size: 0.9em; color: var(--muted); }
   a { color: inherit; }
   code { background: var(--line); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
@@ -70,9 +71,15 @@
     </esp-web-install-button>
   </div>
 
+  <div class="card done" id="done" hidden>
+    <h2 style="margin-top:0">Installed</h2>
+    <p><strong>Now unplug the board and plug it back in</strong> (don't hold any buttons this time). The screen won't change until you do.</p>
+    <p id="doneNext"></p>
+  </div>
+
   <h2>Steps</h2>
   <ol>
-    <li>Plug the board into your computer with the USB-C cable.</li>
+    <li><strong>Hold down the BOOT button</strong> (the middle button on the board) while you plug the board into your computer with the USB-C cable, then let go. This puts the board into install mode. Without it, the board usually won't show up in the list.</li>
     <li>Click <strong>Install</strong>, then choose the board in the list that pops up (it's usually called "USB JTAG/serial debug unit" or shows a COM port), and click <strong>Connect</strong>.</li>
     <li>Click <strong>Install E-Ink Shopping List Board</strong>.</li>
     <li>You'll be asked about erasing the device:
@@ -81,15 +88,16 @@
         <li><strong>Updating a board that's already running the shopping list:</strong> leave Erase <strong>unticked</strong>, or you'll lose your list, WiFi and email settings.</li>
       </ul>
     </li>
-    <li>Wait for it to finish (about a minute), then <strong>unplug the board and plug it back in</strong> to start it.</li>
+    <li>Wait about a minute. When it's done, the installer window closes by itself and a green <strong>Installed</strong> box appears on this page. Then <strong>unplug the board and plug it back in</strong> to start it.</li>
   </ol>
 
   <div class="note">After a first install the screen shows <strong>"Setup needed"</strong>. Scan the QR code on the screen with your phone (or join the WiFi network <code>ShoppingList-Setup</code>) and enter your home WiFi. The full guide covers the rest.</div>
 
   <h2>If something goes wrong</h2>
   <ul>
-    <li><strong>The board isn't in the list, or it says "Failed to initialize":</strong> unplug the board, hold the <strong>BOOT</strong> button while plugging it back in, let go, then click Install again. Still nothing? Try another USB-C cable.</li>
+    <li><strong>The board isn't in the list ("No compatible devices found"), or it says "Failed to initialize":</strong> unplug the board, hold the <strong>BOOT</strong> button (the middle one) while plugging it back in, let go, then click Install again. Still nothing? Flip the USB-C plug over, try another USB port on the computer, or try another USB-C cable. Some cables only carry power.</li>
     <li><strong>The screen doesn't change after installing:</strong> unplug the board and plug it back in.</li>
+    <li><strong>It sits on "Wrapping up" for more than a minute:</strong> the firmware is already installed by then. Close the window, then unplug the board and plug it back in.</li>
     <li><strong>"Failed to open serial port":</strong> close the Arduino IDE or anything else that might be using the board, then try again.</li>
   </ul>
 
@@ -99,5 +107,41 @@
 
   <p class="small">The installer uses <a href="https://github.com/esphome/esp-web-tools">ESP Web Tools</a>. The firmware includes the GPL-3.0 licensed LilyGo-EPD47 display library; its source is linked from the GitHub page.</p>
 </main>
+<script>
+// ESP Web Tools (pinned at 10.4.0) has two rough edges on this board:
+// after writing it can hang on "Wrapping up" while it tries to reopen the
+// USB port, and after "Installation complete" its Next button goes back to
+// the install menu, which looks like it wants to install again.
+// Once the firmware is written and the board reset (state "finished"), close
+// the installer and show our own "unplug and plug back in" message instead.
+// This reads the dialog's internal fields, so it's tied to the pinned
+// version. If they ever change, nothing happens and the steps above still apply.
+(function () {
+  var handled = typeof WeakSet === "function" ? new WeakSet() : null;
+  var done = document.getElementById("done");
+  var next = document.getElementById("doneNext");
+  if (!handled || !done || !next) return;
+  setInterval(function () {
+    var dlg = document.querySelector("ewt-install-dialog");
+    if (!dlg || handled.has(dlg)) return;
+    var s = dlg._installState;
+    if (!s) { done.hidden = true; return; }   // a new install has started
+    if (s.state !== "finished") return;
+    handled.add(dlg);
+    var erased = !!dlg._installErase;
+    setTimeout(function () {
+      try {
+        var d = dlg.shadowRoot && dlg.shadowRoot.querySelector("ew-dialog");
+        if (d) d.close();
+      } catch (e) {}
+      next.textContent = erased
+        ? "The screen will show \"Setup needed\" with a QR code. Scan it with your phone to connect the board to your WiFi."
+        : "Your list and settings will come back as they were. The web app shows the new firmware version at the bottom of the page.";
+      done.hidden = false;
+      done.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 1500);
+  }, 400);
+})();
+</script>
 </body>
 </html>
