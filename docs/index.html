@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install the E-Ink Shopping List Board</title>
+<script type="module" src="https://unpkg.com/esp-web-tools@10.4.0/dist/web/install-button.js?module"></script>
+<style>
+  :root {
+    --bg: #f4f4f2; --card: #ffffff; --text: #1f1f1f; --muted: #5f5f5f;
+    --line: #dddddd; --accent: #222222; --warn-bg: #fff3cd; --warn-text: #6b5000;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161616; --card: #222222; --text: #eeeeee; --muted: #a8a8a8;
+      --line: #383838; --accent: #eeeeee; --warn-bg: #3a3218; --warn-text: #f1d98a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 16px 48px; background: var(--bg); color: var(--text);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 680px; margin: 0 auto; }
+  h1 { font-size: 1.7em; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 1.1em; margin: 32px 0 8px; }
+  p, li { color: var(--text); }
+  .lead { color: var(--muted); margin: 0 0 24px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px; margin: 16px 0;
+  }
+  ol, ul { padding-left: 22px; margin: 8px 0; }
+  li { margin: 6px 0; }
+  .install { text-align: center; padding: 28px 20px; }
+  esp-web-install-button button[slot="activate"] {
+    font: inherit; font-weight: 600; font-size: 1.05em; padding: 14px 28px;
+    border: none; border-radius: 10px; background: var(--accent); color: var(--bg);
+    cursor: pointer;
+  }
+  .note {
+    background: var(--warn-bg); color: var(--warn-text); border-radius: 10px;
+    padding: 12px 14px; margin: 12px 0;
+  }
+  .small { font-size: 0.9em; color: var(--muted); }
+  a { color: inherit; }
+  code { background: var(--line); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Install the E-Ink Shopping List Board</h1>
+  <p class="lead">Install the firmware straight from this page. No Arduino IDE, no libraries and no settings to get right.
+    Firmware version <strong id="ver">1.0.0</strong>.</p>
+
+  <div class="card">
+    <h2 style="margin-top:0">You'll need</h2>
+    <ul>
+      <li>A <strong>LILYGO T5 4.7" E-Paper, ESP32-S3 touch version</strong> ("T5-4.7-S3").</li>
+      <li>A computer with <strong>Chrome or Edge</strong>. Safari, Firefox and phones can't do this.</li>
+      <li>A USB-C cable that carries data, not just power.</li>
+    </ul>
+  </div>
+
+  <div class="card install">
+    <esp-web-install-button manifest="manifest.json">
+      <button slot="activate">Install</button>
+      <span slot="unsupported">This browser can't install firmware. Please open this page in <strong>Chrome or Edge</strong> on a computer.</span>
+      <span slot="not-allowed">Installing needs a secure page. Open this page from its https:// address.</span>
+    </esp-web-install-button>
+  </div>
+
+  <h2>Steps</h2>
+  <ol>
+    <li>Plug the board into your computer with the USB-C cable.</li>
+    <li>Click <strong>Install</strong>, then choose the board in the list that pops up (it's usually called "USB JTAG/serial debug unit" or shows a COM port), and click <strong>Connect</strong>.</li>
+    <li>Click <strong>Install E-Ink Shopping List Board</strong>.</li>
+    <li>You'll be asked about erasing the device:
+      <ul>
+        <li><strong>First time installing on this board:</strong> tick <strong>Erase</strong>. It clears out whatever was on the board before.</li>
+        <li><strong>Updating a board that's already running the shopping list:</strong> leave Erase <strong>unticked</strong>, or you'll lose your list, WiFi and email settings.</li>
+      </ul>
+    </li>
+    <li>Wait for it to finish (about a minute), then <strong>unplug the board and plug it back in</strong> to start it.</li>
+  </ol>
+
+  <div class="note">After a first install the screen shows <strong>"Setup needed"</strong>. Scan the QR code on the screen with your phone (or join the WiFi network <code>ShoppingList-Setup</code>) and enter your home WiFi. The full guide covers the rest.</div>
+
+  <h2>If something goes wrong</h2>
+  <ul>
+    <li><strong>The board isn't in the list, or it says "Failed to initialize":</strong> unplug the board, hold the <strong>BOOT</strong> button while plugging it back in, let go, then click Install again. Still nothing? Try another USB-C cable.</li>
+    <li><strong>The screen doesn't change after installing:</strong> unplug the board and plug it back in.</li>
+    <li><strong>"Failed to open serial port":</strong> close the Arduino IDE or anything else that might be using the board, then try again.</li>
+  </ul>
+
+  <h2>Want to change the code?</h2>
+  <p>All the source code is on <a href="https://github.com/lonesoulsurfer/eink-shopping-list">GitHub</a>, with instructions for building it yourself in the Arduino IDE.
+    The full build guide is on <a href="https://www.instructables.com/member/lonesoulsurfer/">Instructables</a>.</p>
+
+  <p class="small">The installer uses <a href="https://github.com/esphome/esp-web-tools">ESP Web Tools</a>. The firmware includes the GPL-3.0 licensed LilyGo-EPD47 display library; its source is linked from the GitHub page.</p>
+</main>
+</body>
+</html>
