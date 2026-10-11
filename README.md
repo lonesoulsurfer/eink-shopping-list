@@ -27,11 +27,12 @@ E-ink suits this really well. It's readable in any light and keeps showing the l
 No Arduino IDE needed. You'll need a computer with **Chrome or Edge** (Safari, Firefox and phones can't do this) and a USB-C cable that carries data.
 
 1. Go to the installer page: **<https://lonesoulsurfer.github.io/eink-shopping-list/>**
-2. Plug the board in, click **Install**, pick the board from the list and click **Connect**.
-3. When asked about erasing: tick **Erase** the first time you install on a board. When **updating** a board that already runs the shopping list, leave it **unticked**, or you'll lose your list, WiFi and email settings.
-4. When it's finished, unplug the board and plug it back in.
+2. **Hold down the BOOT button** (the middle button on the board) while you plug the board into your computer, then let go. Without this, the board usually won't show up in the list.
+3. Click **Install**, pick the board from the list and click **Connect**.
+4. When asked about erasing: tick **Erase** the first time you install on a board. When **updating** a board that already runs the shopping list, leave it **unticked**, or you'll lose your list, WiFi and email settings.
+5. When it's finished, the installer closes and a green **Installed** box appears. Unplug the board and plug it back in to start it. If it ever sits on "Wrapping up" for more than a minute, the firmware is already installed: close the window and unplug/replug.
 
-If the board doesn't show up in the list, unplug it, hold the **BOOT** button while plugging it back in, then try again.
+If Chrome says "No compatible devices found", the board isn't in install mode. Unplug it and do step 2 again. If it still doesn't show up, flip the USB-C plug over, or try another USB port or cable.
 
 To **update** later, do the same thing with Erase unticked. The web app shows the board's firmware version at the bottom of the page, so you can tell whether it's up to date.
 
