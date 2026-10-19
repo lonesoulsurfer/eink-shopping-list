@@ -49,10 +49,12 @@ const char PAGE_HTML[] PROGMEM = R"HTML(
   .settings input { width: 100%; box-sizing: border-box; padding: 10px; font-size: 1em;
                     border: 1px solid #ccc; border-radius: 8px; margin-bottom: 8px; }
   .settings button { width: 100%; }
+  .rcpt + .rcpt { border-top: 1px solid #e3e3e3; padding-top: 10px; }
   .rcptRow { display: flex; gap: 8px; }
   .rcptRow input:first-child { flex: 0 0 32%; }
   .hint { font-size: 0.85em; color: #666; margin: 4px 0 8px; }
   .emailRow { flex-wrap: wrap; }
+  .emailRow button { flex: 1 1 40%; }  /* two per line, however many people */
   .emailRow:empty { display: none; }
   #sendStatus:empty { display: none; }
   #offlineBanner { display: none; background: #fff3cd; color: #7a5b00; padding: 10px 12px;
@@ -88,17 +90,22 @@ const char PAGE_HTML[] PROGMEM = R"HTML(
   <button onclick="clearEverything()">Clear everything</button>
 </div>
 
-<h2>Send button (email)</h2>
+<h2>Sending the list</h2>
 <div class="settings">
-  <p class="hint">The board's <b>Send</b> button, and the <b>Email list to...</b>
-    buttons on this page, email the list to one of these people. With more
-    than one, the board asks who to send it to.</p>
-  <div class="rcptRow"><input type="text" id="rName0" placeholder="Name" maxlength="16">
+  <p class="hint">Up to 3 people. Give each an email address, a mobile number, or both.<br>
+    <b>Email:</b> the board's <b>Send</b> button and the <b>Email list to...</b>
+    buttons. With more than one person, the board asks who to send it to.<br>
+    <b>Text:</b> the <b>Text list to...</b> buttons open your phone's Messages
+    app with the list ready to send, from your own number. No account needed.</p>
+  <div class="rcpt"><div class="rcptRow"><input type="text" id="rName0" placeholder="Name" maxlength="16">
     <input type="email" id="rEmail0" placeholder="email address"></div>
-  <div class="rcptRow"><input type="text" id="rName1" placeholder="Name" maxlength="16">
+    <input type="tel" id="rPhone0" placeholder="mobile, for texts (optional)"></div>
+  <div class="rcpt"><div class="rcptRow"><input type="text" id="rName1" placeholder="Name" maxlength="16">
     <input type="email" id="rEmail1" placeholder="email address (optional)"></div>
-  <div class="rcptRow"><input type="text" id="rName2" placeholder="Name" maxlength="16">
+    <input type="tel" id="rPhone1" placeholder="mobile, for texts (optional)"></div>
+  <div class="rcpt"><div class="rcptRow"><input type="text" id="rName2" placeholder="Name" maxlength="16">
     <input type="email" id="rEmail2" placeholder="email address (optional)"></div>
+    <input type="tel" id="rPhone2" placeholder="mobile, for texts (optional)"></div>
 
   <p class="hint">Sent <b>from</b> a Gmail account using an <b>app password</b>
     (Google Account &gt; Security &gt; 2-Step Verification &gt; App passwords).
@@ -520,31 +527,59 @@ async function loadEmailSettings() {
       ? 'App password saved - leave blank to keep it'
       : 'Gmail app password (16 letters)';
     for (let i = 0; i < 3; i++) {
-      const r = (cfg.recipients || [])[i] || {name: '', email: ''};
-      document.getElementById('rName' + i).value = r.name;
-      document.getElementById('rEmail' + i).value = r.email;
+      const r = (cfg.recipients || [])[i] || {};
+      document.getElementById('rName' + i).value = r.name || '';
+      document.getElementById('rEmail' + i).value = r.email || '';
+      document.getElementById('rPhone' + i).value = r.phone || '';
     }
-    renderEmailButtons(cfg);
+    renderSendButtons(cfg);
   } catch (e) {
     // Board unreachable - leave the boxes as they are.
   }
 }
 
-// --- "Email to <name>" buttons -------------------------------------------
-// One button per recipient, shown once email is fully set up. The board
-// does the actual send (same as its own Send button); this page asks for
-// it, then checks back every second for the result.
-function renderEmailButtons(cfg) {
+// --- "Email list to" / "Text list to" buttons ----------------------------
+// Email: one button per person with an email address, once email is fully
+// set up. The board does the actual send (same as its own Send button);
+// this page asks for it, then checks back every second for the result.
+// The index sent is the person's position among those WITH an email - the
+// same list the board's own Send picker uses.
+// Text: one button per person with a mobile number. Nothing goes through the
+// board: the button opens this phone's Messages app with the list filled in.
+function renderSendButtons(cfg) {
   const box = document.getElementById('emailButtons');
   box.innerHTML = '';
-  const ready = cfg.from && cfg.passwordSet && (cfg.recipients || []).length > 0;
-  if (!ready) return;
-  cfg.recipients.forEach((r, i) => {
+  const all = cfg.recipients || [];
+  const withEmail = all.filter(r => r.email);
+  if (cfg.from && cfg.passwordSet) {
+    withEmail.forEach((r, i) => {
+      const b = document.createElement('button');
+      b.textContent = 'Email list to ' + r.name;
+      b.onclick = () => emailList(i, r.name);
+      box.appendChild(b);
+    });
+  }
+  all.filter(r => r.phone).forEach(r => {
     const b = document.createElement('button');
-    b.textContent = 'Email list to ' + r.name;
-    b.onclick = () => emailList(i, r.name);
+    b.textContent = 'Text list to ' + r.name;
+    b.onclick = () => textList(r.phone);
     box.appendChild(b);
   });
+}
+
+// Deliberately NOT async: phones only let a page open another app straight
+// from a tap, and an await before it would break that. The list is the one
+// on screen (refreshed every 5 seconds). "?&body=" is the form that both
+// iPhone and Android accept.
+function textList(phone) {
+  const status = document.getElementById('sendStatus');
+  const text = buildListText();
+  if (!text) {
+    status.textContent = 'Nothing to send - the list is empty.';
+    return;
+  }
+  status.textContent = '';
+  window.location.href = 'sms:' + phone + '?&body=' + encodeURIComponent(text);
 }
 
 const SEND_MESSAGES = {
@@ -591,8 +626,9 @@ async function saveEmailSettings() {
   const recipients = [];
   for (let i = 0; i < 3; i++) {
     const email = document.getElementById('rEmail' + i).value.trim();
+    const phone = document.getElementById('rPhone' + i).value.trim();
     const name = document.getElementById('rName' + i).value.trim();
-    if (email) recipients.push({name, email});
+    if (email || phone) recipients.push({name, email, phone});
   }
   const body = {
     from: document.getElementById('mailFrom').value.trim(),
@@ -610,10 +646,13 @@ async function saveEmailSettings() {
     status.textContent = "Couldn't reach the board - not saved. Try again on home WiFi.";
     return;
   }
-  const ready = body.from && recipients.length > 0 && (body.password || passwordSaved);
-  status.textContent = ready
+  const emailReady = body.from && recipients.some(r => r.email) && (body.password || passwordSaved);
+  const anyPhone = recipients.some(r => r.phone);
+  status.textContent = emailReady
     ? 'Saved. The Send button will appear on the board in a few seconds.'
-    : 'Saved. (The Send button needs a Gmail address, app password and at least one recipient.)';
+    : anyPhone
+    ? 'Saved. The Text buttons are ready. (Email and the board\'s Send button also need a Gmail address, app password and someone with an email.)'
+    : 'Saved. (The Send button needs a Gmail address, app password and someone with an email.)';
   loadEmailSettings();  // show what the board actually stored (e.g. default names)
 }
 

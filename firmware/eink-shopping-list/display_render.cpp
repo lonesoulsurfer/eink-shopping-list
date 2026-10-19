@@ -152,7 +152,7 @@ void display_render_setup_screen() {
     "   (or browse to 192.168.4.1)",
     "",
     "3. Enter your WiFi + optional Pushover",
-    "   details (free at pushover.net)",
+    "   details (see pushover.net)",
   };
   int y = contentY;
   for (const char* line : lines) {

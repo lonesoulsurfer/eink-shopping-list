@@ -1,6 +1,6 @@
 # E-Ink Shopping List Board
 
-A touchscreen e-ink shopping list for the kitchen, built on the LILYGO T5 4.7" E-Paper (ESP32-S3) board. Tick everyday items on the glass when you run out, add anything else from your phone, and email the list to whoever is doing the shopping, all without an app or a cloud account.
+A touchscreen e-ink shopping list for the kitchen, built on the LILYGO T5 4.7" E-Paper (ESP32-S3) board. Tick everyday items on the glass when you run out, add anything else from your phone, and email or text the list to whoever is doing the shopping, all without an app or a cloud account.
 
 <!-- Add a photo of the board here, e.g. ![The board on the fridge](docs/board.jpg) -->
 
@@ -9,6 +9,7 @@ A touchscreen e-ink shopping list for the kitchen, built on the LILYGO T5 4.7" E
 - Tap everyday items (milk, eggs, bread and so on) right on the screen when you run out.
 - Add anything else from a phone on your home WiFi (scan the Join QR code on the board). It shows up on the board within a few seconds, with the name of whoever added it.
 - Email the list to someone, from the board's Send button or from your phone. Set up 2 or 3 people and you pick who gets it.
+- Text the list from your phone: one tap opens your Messages app with the list ready to send. No SMS account or cost.
 - Copy the whole list into Notes from the web app with one tap.
 - Keeps working when the WiFi is down, and reconnects on its own.
 - No code editing. WiFi and everything else is set up from your phone.
@@ -97,7 +98,7 @@ Download this repository (**Code > Download ZIP** at <https://github.com/lonesou
 
 Build warnings you can ignore:
 
-- `send_P ... is deprecated`
+- `send_P ... is deprecated` and `beginResponse_P ... is deprecated`
 - `TouchDrvGT911.hpp is deprecated`
 - `getPoint ... is deprecated`
 
@@ -126,9 +127,10 @@ These are newer library APIs that the code doesn't use yet, kept deliberately so
 
 - Add and remove everyday items, tick them, and add "Also need" items. The app asks your name once, so the board can show who added each item.
 - **Copy list for shopping:** copies the list for Notes or a message, then asks whether to clear the board.
-- **Email list to (name):** one button per recipient, once email is set up. The board sends it, and the page tells you when it's gone (or why it didn't).
+- **Email list to (name):** one button per person with an email address, once email is set up. The board sends it, and the page tells you when it's gone (or why it didn't).
+- **Text list to (name):** one button per person with a mobile number. It opens your phone's Messages app with their number and the list filled in; tap Send. The text comes from your own number, so replies come back to you. The board itself never sends texts.
 - **Clear 'Also need'** and **Clear everything** both ask for confirmation first.
-- **Send button (email):** set up to 3 recipients and the sending Gmail account. These are used by both the board's Send button and the phone's email buttons.
+- **Sending the list:** set up to 3 people, each with an email address, a mobile number, or both, plus the sending Gmail account (only needed for email). People with an email appear on the board's Send button and the phone's Email buttons; people with a mobile number get a Text button.
 - **Re-run WiFi setup:** forgets the WiFi only. Other settings are kept.
 
 ### Add it to your phone's home screen
@@ -141,13 +143,18 @@ Saving the web app to your home screen gives it an icon and opens it full screen
 
 Private and incognito tabs can't add to the home screen; use a normal tab. The shortcut saves the board's IP address, so see the note below about keeping that address fixed.
 
-## Email setup (Send button)
+## Email and text setup
+
+**Texts** need no setup beyond a mobile number: add it next to the person's name in the web app's **Sending the list** section and tap Save. Australian numbers like `0412 345 678` are fine; spaces and dashes are removed. For someone overseas, use the `+` country code format.
+
+**Email** is sent by the board, which takes a few more steps:
+
 
 The list is sent **from a Gmail account** using an **app password**. Gmail no longer accepts normal passwords from devices.
 
 1. Turn on **2-Step Verification** for the Gmail account (Google Account > Security).
 2. Create an app password at <https://myaccount.google.com/apppasswords>. Copy the 16-letter code.
-3. In the web app's **Send button (email)** section, enter the Gmail address, the app password, and up to 3 recipients. Recipients can use any email provider. Save.
+3. In the web app's **Sending the list** section, enter the Gmail address, the app password, and up to 3 people. Recipients can use any email provider. Save.
 
 > **Use a separate Gmail account for the board if you can.** An app password can also *read* that mailbox, and it's stored on the board, where someone with physical access and a USB cable could recover it. You can revoke an app password at any time from your Google account. Changing the account's main password also revokes it, so Send will fail until you enter a new one.
 
@@ -155,7 +162,8 @@ The board verifies Google's TLS certificate before sending. The Google root cert
 
 ## Notes
 
-- The web app only works on your home WiFi, since the board itself serves it. Use Send to get the list to someone who's out.
+- The web app only works on your home WiFi, since the board itself serves it. Use Send, or a Text button, to get the list to someone who's out.
+- After a firmware update, if the web app still looks the same as before, close it fully and open it again (on iPhone, swipe it away in the app switcher). Home-screen web apps can keep the old page open. From 1.0.1 the board tells phones not to keep old copies, so this should only be needed once.
 - The Join QR code uses the board's IP address (like `http://192.168.0.162`) rather than `shoppinglist.local`, because many phones, especially Android ones, can't open `.local` addresses and just show a blank page. iPhones and computers usually manage `shoppinglist.local` fine.
 - If people save the web app to their home screen, it saves that IP address. Most routers keep giving a device the same address, but if the board's address ever changes, those shortcuts stop working; scan the Join code again to fix it. To stop it changing, set up a "DHCP reservation" for the board in your router's settings.
 - If you change your router or WiFi password, power-cycle the board. When it can't find its saved network it opens the setup hotspot (3 minutes at a time) until you set it up again or the old network comes back. If the board is already running when you change the router, it just shows "No WiFi" until you power-cycle it.
@@ -168,8 +176,8 @@ The board verifies Google's TLS certificate before sending. The Google root cert
 ## Tested so far
 
 <!-- Update this list before publishing -->
-- Tested on hardware: touch, everyday items, Join QR, web app add/tick/clear, Copy (iPhone), adding to the iPhone home screen, Send by email (single recipient), offline behaviour, "No WiFi" and the 180-degree screen rotation.
-- Built but not yet tested on hardware: the web installer page, emailing from the phone, Send recipient picker (2 or 3 recipients), Pushover notifications, OTA updates, copying on Android, router-off recovery.
+- Tested on hardware: touch, everyday items, Join QR, web app add/tick/clear, Copy (iPhone), adding to the iPhone home screen, Send by email (single recipient), offline behaviour, "No WiFi", the 180-degree screen rotation, and the web installer (install and update with Erase unticked, settings kept).
+- Built but not yet tested on hardware: the Text buttons (1.0.1), emailing from the phone, Send recipient picker (2 or 3 recipients), Pushover notifications, OTA updates, copying on Android, router-off recovery.
 
 ## Project layout
 
