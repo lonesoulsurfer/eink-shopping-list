@@ -176,8 +176,8 @@ The board verifies Google's TLS certificate before sending. The Google root cert
 ## Tested so far
 
 <!-- Update this list before publishing -->
-- Tested on hardware: touch, everyday items, Join QR, web app add/tick/clear, Copy (iPhone), adding to the iPhone home screen, Send by email (single recipient), offline behaviour, "No WiFi", the 180-degree screen rotation, and the web installer (install and update with Erase unticked, settings kept).
-- Built but not yet tested on hardware: the Text buttons (1.0.1), emailing from the phone, Send recipient picker (2 or 3 recipients), Pushover notifications, OTA updates, copying on Android, router-off recovery.
+- Tested on hardware: touch, everyday items, Join QR, web app add/tick/clear, Copy (iPhone), adding to the iPhone home screen, Send by email (single recipient), offline behaviour, "No WiFi", the 180-degree screen rotation, the web installer (install and update with Erase unticked, settings kept), wireless (OTA) updates, and the Text buttons from an iPhone home-screen web app.
+- Built but not yet tested on hardware: emailing from the phone, Send recipient picker (2 or 3 recipients), Pushover notifications, copying on Android, router-off recovery.
 
 ## Project layout
 
