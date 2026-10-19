@@ -223,7 +223,7 @@ SendState sendListByEmail(size_t index, bool mustRedraw) {
   auto items = store.getItems();
   int count;
   String body = buildListText(favs, items, count);
-  std::vector<Recipient> rcpts = config_get_recipients();
+  std::vector<Recipient> rcpts = config_get_email_recipients();
 
   if (index >= rcpts.size()) {  // settings changed under us
     if (fromPicker) redrawNow();
@@ -294,7 +294,7 @@ SendState sendListByEmail(size_t index, bool mustRedraw) {
 
 // Send button: straight to the only recipient, or the picker for several.
 void onSendButton() {
-  std::vector<Recipient> rcpts = config_get_recipients();
+  std::vector<Recipient> rcpts = config_get_email_recipients();
   if (rcpts.empty()) return;  // button shouldn't be showing
   if (rcpts.size() == 1) {
     sendListByEmail(0, false);

@@ -6,7 +6,7 @@
 
 // Firmware version: shown at the bottom of the phone web app and printed
 // to the Serial Monitor at startup. Bump it for each release.
-#define FIRMWARE_VERSION "1.0.0"
+#define FIRMWARE_VERSION "1.0.1"
 
 // Network name: the web app is at http://shoppinglist.local
 // Change it if you run more than one board on the same network.

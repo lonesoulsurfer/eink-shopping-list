@@ -1,0 +1,13 @@
+# Arduino / PlatformIO build output
+build/
+.pio/
+*.elf
+*.map
+# (Firmware .bin files in docs/firmware/ ARE committed - the web installer
+# serves them - so .bin is deliberately not ignored here.)
+
+# Editors and OS clutter
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

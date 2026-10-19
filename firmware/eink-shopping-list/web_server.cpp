@@ -29,8 +29,12 @@ void web_server_begin(ListStore* store, FavoritesStore* favorites) {
   g_store = store;
   g_favorites = favorites;
 
+  // no-cache: phones (iPhone home-screen web apps especially) otherwise keep
+  // showing an old copy of the page after a firmware update.
   server.on("/", HTTP_GET, [](AsyncWebServerRequest* req) {
-    req->send_P(200, "text/html", PAGE_HTML);
+    AsyncWebServerResponse* res = req->beginResponse_P(200, "text/html", PAGE_HTML);
+    res->addHeader("Cache-Control", "no-cache");
+    req->send(res);
   });
 
   server.on("/manifest.json", HTTP_GET, [](AsyncWebServerRequest* req) {
@@ -157,7 +161,8 @@ void web_server_begin(ListStore* store, FavoritesStore* favorites) {
     req->send(200, "application/json", "{\"ok\":true}");
   });
 
-  // --- Send button settings: sender Gmail + up to 3 named recipients ---
+  // --- Sending settings: sender Gmail + up to 3 named recipients, each with
+  // an email address, a mobile number for texts, or both ---
   // The app password is write-only: GET only says whether one is saved, it
   // never sends it back to the phone. Anyone on the home WiFi can change
   // these (the web app has no login) - acceptable for a household board.
@@ -172,6 +177,7 @@ void web_server_begin(ListStore* store, FavoritesStore* favorites) {
       JsonObject o = arr.add<JsonObject>();
       o["name"] = r.name;
       o["email"] = r.email;
+      o["phone"] = r.phone;
     }
     String out;
     serializeJson(doc, out);
@@ -198,11 +204,21 @@ void web_server_begin(ListStore* store, FavoritesStore* favorites) {
         Recipient r;
         r.name = o["name"] | "";
         r.email = config_compact(o["email"] | "");
-        if (r.email.length() == 0) continue;  // blank row
-        if (r.email.indexOf('@') <= 0) {
+        String phoneIn = o["phone"] | "";
+        phoneIn.trim();
+        if (r.email.length() == 0 && phoneIn.length() == 0) continue;  // blank row
+        if (r.email.length() > 0 && r.email.indexOf('@') <= 0) {
           req->send(400, "application/json",
-                    "{\"error\":\"One of the recipient addresses doesn't look right.\"}");
+                    "{\"error\":\"One of the email addresses doesn't look right.\"}");
           return;
+        }
+        if (phoneIn.length() > 0) {
+          r.phone = config_clean_phone(phoneIn);
+          if (r.phone.length() == 0) {
+            req->send(400, "application/json",
+                      "{\"error\":\"One of the mobile numbers doesn't look right.\"}");
+            return;
+          }
         }
         list.push_back(r);
       }
@@ -231,8 +247,10 @@ void web_server_begin(ListStore* store, FavoritesStore* favorites) {
         req->send(400, "application/json", "{\"error\":\"Email isn't set up yet.\"}");
         return;
       }
+      // Index into the people WITH an email, the same list the board's own
+      // Send picker uses (text-only people can't be emailed).
       int index = doc["recipient"] | -1;
-      std::vector<Recipient> rcpts = config_get_recipients();
+      std::vector<Recipient> rcpts = config_get_email_recipients();
       if (index < 0 || (size_t)index >= rcpts.size()) {
         req->send(400, "application/json", "{\"error\":\"Unknown recipient.\"}");
         return;

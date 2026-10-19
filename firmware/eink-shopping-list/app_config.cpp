@@ -30,6 +30,20 @@ String config_name_from_email(const String& email) {
   return utf8Truncate(name, MAX_RECIPIENT_NAME_BYTES);
 }
 
+String config_clean_phone(const String& s) {
+  String out;
+  for (size_t i = 0; i < s.length(); i++) {
+    char c = s[i];
+    if (c >= '0' && c <= '9') out += c;
+    else if (c == '+' && out.length() == 0) out += c;
+    else if (c == ' ' || c == '-' || c == '.' || c == '(' || c == ')') continue;
+    else return "";  // letters or other junk: not a phone number
+  }
+  size_t digits = out.length() - (out.startsWith("+") ? 1 : 0);
+  if (digits < 6 || digits > 15) return "";
+  return out;
+}
+
 static String recipientsToJson() {
   JsonDocument doc;
   JsonArray arr = doc.to<JsonArray>();
@@ -37,6 +51,7 @@ static String recipientsToJson() {
     JsonObject o = arr.add<JsonObject>();
     o["name"] = r.name;
     o["email"] = r.email;
+    if (r.phone.length() > 0) o["phone"] = r.phone;
   }
   String out;
   serializeJson(doc, out);
@@ -62,8 +77,10 @@ void config_load() {
       if (recipients.size() >= MAX_RECIPIENTS) break;
       Recipient r;
       r.name = o["name"].as<String>();
-      r.email = o["email"].as<String>();
-      if (r.email.indexOf('@') > 0) recipients.push_back(r);
+      r.email = o["email"] | "";
+      r.phone = config_clean_phone(o["phone"] | "");
+      if (r.email.indexOf('@') <= 0) r.email = "";
+      if (r.email.length() > 0 || r.phone.length() > 0) recipients.push_back(r);
     }
   }
 }
@@ -100,6 +117,14 @@ void config_set_email_sender(const String& from, const String& appPassword) {
 
 std::vector<Recipient> config_get_recipients() { StoreLock l(cfgMutex); return recipients; }
 
+std::vector<Recipient> config_get_email_recipients() {
+  StoreLock l(cfgMutex);
+  std::vector<Recipient> out;
+  for (const auto& r : recipients)
+    if (r.email.length() > 0) out.push_back(r);
+  return out;
+}
+
 void config_set_recipients(const std::vector<Recipient>& list) {
   StoreLock l(cfgMutex);
   recipients.clear();
@@ -107,16 +132,22 @@ void config_set_recipients(const std::vector<Recipient>& list) {
     if (recipients.size() >= MAX_RECIPIENTS) break;
     Recipient r;
     r.email = utf8Truncate(config_compact(in.email), MAX_EMAIL_BYTES);
-    if (r.email.indexOf('@') <= 0) continue;
+    if (r.email.indexOf('@') <= 0) r.email = "";
+    r.phone = utf8Truncate(config_clean_phone(in.phone), MAX_PHONE_BYTES);
+    if (r.email.length() == 0 && r.phone.length() == 0) continue;
     String name = in.name;
     name.trim();
     r.name = name.length() > 0 ? utf8Truncate(name, MAX_RECIPIENT_NAME_BYTES)
-                               : config_name_from_email(r.email);
+           : r.email.length() > 0 ? config_name_from_email(r.email)
+           : r.phone;
     recipients.push_back(r);
   }
 }
 
 bool config_email_enabled() {
   StoreLock l(cfgMutex);
-  return emailFrom.indexOf('@') > 0 && emailAppPass.length() > 0 && !recipients.empty();
+  if (emailFrom.indexOf('@') <= 0 || emailAppPass.length() == 0) return false;
+  for (const auto& r : recipients)
+    if (r.email.length() > 0) return true;
+  return false;
 }
