@@ -217,7 +217,7 @@ Do you like this project? You can support my work on [GitHub Sponsors](https://g
 
 ## Licence
 
-The source code in this repository is MIT licensed, see [LICENSE](LICENSE). The ready-built firmware in `docs/firmware/` also contains the [LilyGo-EPD47](https://github.com/Xinyuan-LilyGO/LilyGo-EPD47/tree/esp32s3) display library, which is GPL-3.0, so that compiled firmware is distributed under the GPL-3.0. The complete source for it is this repository plus the libraries listed above.
+The source code in this repository is MIT licensed, see [LICENSE](LICENSE). The ready-built firmware in `docs/firmware/` also contains the [LilyGo-EPD47](https://github.com/Xinyuan-LilyGO/LilyGo-EPD47/tree/esp32s3) display library, which is GPL-3.0, so that compiled firmware is distributed under the GPL-3.0. The complete source for it is this repository plus the libraries listed above. [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) lists all third-party parts and their licences.
 
 ## Credits
 
