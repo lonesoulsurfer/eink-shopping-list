@@ -211,6 +211,10 @@ tools/make_release.py      copies a new build into docs/ for the installer
 
 The installer writes the firmware in four parts at the same addresses as the Arduino IDE, skipping the area where the board keeps its settings, so updating (without Erase) keeps the list, WiFi and email settings.
 
+## Support
+
+Do you like this project? You can support my work on [GitHub Sponsors](https://github.com/sponsors/lonesoulsurfer).
+
 ## Licence
 
 The source code in this repository is MIT licensed, see [LICENSE](LICENSE). The ready-built firmware in `docs/firmware/` also contains the [LilyGo-EPD47](https://github.com/Xinyuan-LilyGO/LilyGo-EPD47/tree/esp32s3) display library, which is GPL-3.0, so that compiled firmware is distributed under the GPL-3.0. The complete source for it is this repository plus the libraries listed above.
